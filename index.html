@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍴 大学城美食地图 Pro | 智能推荐你的下一餐</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>大学城美食地图</span>
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="active"><i class="fas fa-home"></i> 首页</a>
+                <a href="#map"><i class="fas fa-map-marked-alt"></i> 地图</a>
+                <a href="#ai-recommend"><i class="fas fa-robot"></i> AI推荐</a>
+                <a href="#about"><i class="fas fa-info-circle"></i> 关于</a>
+            </div>
+            <div class="user-actions">
+                <button class="btn-login" onclick="toggleLoginModal()">
+                    <i class="fas fa-user"></i> 登录/注册
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 登录/注册模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="toggleLoginModal()">&times;</span>
+            <h3><i class="fas fa-user-circle"></i> 用户登录</h3>
+            <form id="loginForm">
+                <input type="text" placeholder="邮箱/学号" required>
+                <input type="password" placeholder="密码" required>
+                <button type="submit" class="btn-primary">登录</button>
+            </form>
+            <p class="register-text">还没有账号？ <a href="#" onclick="switchToRegister()">立即注册</a></p>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="main-container">
+        <!-- 搜索栏和筛选器 -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>今天吃什么？让AI帮你决定！</h1>
+                <p>汇集大学城周边300+家餐厅，智能推荐你的专属美食</p>
+                
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="搜索餐厅、菜系、特色...">
+                        <button class="search-button" onclick="searchRestaurants()">搜索</button>
+                    </div>
+                    <div class="quick-filters">
+                        <button class="quick-filter active" data-filter="all">
+                            <i class="fas fa-th"></i> 全部
+                        </button>
+                        <button class="quick-filter" data-filter="附近">
+                            <i class="fas fa-location-dot"></i> 附近
+                        </button>
+                        <button class="quick-filter" data-filter="评分高">
+                            <i class="fas fa-star"></i> 评分高
+                        </button>
+                        <button class="quick-filter" data-filter="人均低">
+                            <i class="fas fa-wallet"></i> 人均低
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分类导航 -->
+        <section class="categories-section">
+            <h2><i class="fas fa-tags"></i> 美食分类</h2>
+            <div class="categories-grid">
+                <button class="category-card" data-category="all">
+                    <i class="fas fa-utensils"></i>
+                    <span>全部</span>
+                </button>
+                <button class="category-card" data-category="川湘菜">
+                    <i class="fas fa-pepper-hot"></i>
+                    <span>川湘菜</span>
+                </button>
+                <button class="category-card" data-category="快餐">
+                    <i class="fas fa-burger"></i>
+                    <span>快餐</span>
+                </button>
+                <button class="category-card" data-category="西餐">
+                    <i class="fas fa-pizza-slice"></i>
+                    <span>西餐</span>
+                </button>
+                <button class="category-card" data-category="日韩料理">
+                    <i class="fas fa-fish"></i>
+                    <span>日韩料理</span>
+                </button>
+                <button class="category-card" data-category="甜品">
+                    <i class="fas fa-ice-cream"></i>
+                    <span>甜品</span>
+                </button>
+                <button class="category-card" data-category="火锅烧烤">
+                    <i class="fas fa-fire"></i>
+                    <span>火锅烧烤</span>
+                </button>
+                <button class="category-card" data-category="早餐">
+                    <i class="fas fa-mug-hot"></i>
+                    <span>早餐</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- AI推荐区域 -->
+        <section class="ai-section" id="ai-recommend">
+            <div class="section-header">
+                <h2><i class="fas fa-robot"></i> AI智能推荐</h2>
+                <button class="btn-refresh" onclick="generateAIRecommendation()">
+                    <i class="fas fa-sync-alt"></i> 重新推荐
+                </button>
+            </div>
+            <div class="ai-card">
+                <div class="ai-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <h3>美食助手AI</h3>
+                        <p>根据您的偏好和当前时间推荐</p>
+                    </div>
+                </div>
+                <div class="ai-content">
+                    <p id="aiRecommendationText">正在分析您的偏好...</p>
+                    <div class="recommended-restaurants" id="aiRecommendedRestaurants">
+                        <!-- AI推荐餐厅会动态加载到这里 -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 餐厅列表 -->
+        <section class="restaurants-section">
+            <div class="section-header">
+                <h2><i class="fas fa-store"></i> 推荐餐厅</h2>
+                <div class="sort-options">
+                    <select id="sortSelect" onchange="sortRestaurants()">
+                        <option value="rating">评分最高</option>
+                        <option value="distance">距离最近</option>
+                        <option value="price_low">价格从低到高</option>
+                        <option value="price_high">价格从高到低</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="restaurants-grid" id="restaurantsGrid">
+                <!-- 餐厅卡片会动态加载到这里 -->
+            </div>
+
+            <div class="load-more">
+                <button class="btn-load-more" onclick="loadMoreRestaurants()">
+                    <i class="fas fa-plus"></i> 加载更多
+                </button>
+            </div>
+        </section>
+
+        <!-- 地图区域 -->
+        <section class="map-section" id="map">
+            <div class="section-header">
+                <h2><i class="fas fa-map-marked-alt"></i> 美食地图</h2>
+                <button class="btn-locate" onclick="locateUser()">
+                    <i class="fas fa-location-crosshairs"></i> 定位我
+                </button>
+            </div>
+            <div id="mapContainer"></div>
+        </section>
+
+        <!-- 统计信息 -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-store"></i>
+                    <h3>328</h3>
+                    <p>合作餐厅</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-user-friends"></i>
+                    <h3>12,456</h3>
+                    <p>活跃用户</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-star"></i>
+                    <h3>4.8</h3>
+                    <p>平均评分</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-comment-dots"></i>
+                    <h3>8,923</h3>
+                    <p>用户评价</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 餐厅详情模态框 -->
+    <div id="restaurantModal" class="modal restaurant-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRestaurantModal()">&times;</span>
+            <div id="restaurantDetailContent">
+                <!-- 餐厅详情会动态加载到这里 -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3><i class="fas fa-utensils"></i> 大学城美食地图</h3>
+                <p>为大学生提供最全面的美食指南</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-weixin"></i></a>
+                    <a href="#"><i class="fab fa-qq"></i></a>
+                    <a href="#"><i class="fab fa-weibo"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>快速链接</h4>
+                <a href="#home">首页</a>
+                <a href="#map">美食地图</a>
+                <a href="#ai-recommend">AI推荐</a>
+                <a href="#about">关于我们</a>
+            </div>
+            <div class="footer-section">
+                <h4>联系方式</h4>
+                <p><i class="fas fa-envelope"></i> contact@foodmap.com</p>
+                <p><i class="fas fa-phone"></i> 400-123-4567</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 大学城美食地图. 为学生而生，为美食而聚.</p>
+        </div>
+    </footer>
+
+    <script src="data/restaurants.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
